@@ -1,0 +1,243 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<script>
+
+window.onload = function () {
+
+var dataPoints1 = [];
+var dataPoints2 = [];
+var dataPoints3 = [];
+var dataPoints4 = [];
+var dataPoints5 = [];
+var dataPoints6 = [];
+
+
+var chart = new CanvasJS.Chart("chartContainer", {
+
+
+	zoomEnabled: true,
+	title: {
+		text: "Posture data"
+	},
+	axisX: {
+		title: "time"
+	},
+	axisY:{
+		prefix: "",
+		includeZero: false
+	}, 
+	toolTip: {
+		shared: true
+	},
+	legend: {
+		cursor:"pointer",
+		verticalAlign: "top",
+		fontSize: 22,
+		fontColor: "dimGrey",
+		itemclick : toggleDataSeries
+	},
+
+	data: 
+    // $.getJSON('http://phant.it.tufts.edu/output/pgwXVQg9zKF9Xb2kzA6dh3E30vo/latest.json', function (jsonData) {
+        [
+            { 
+            type: "line",
+            xValueType: "dateTime",
+            yValueFormatString: "$####.00",
+            xValueFormatString: "hh:mm:ss TT",
+            showInLegend: true,
+            name: "X coordinates",
+            color: "red",
+            dataPoints: dataPoints1
+            },
+            {				
+            type: "line",
+            xValueType: "dateTime",
+            yValueFormatString: "$####.00",
+            showInLegend: true,
+            name: "Y coordinates" ,
+            color: "blue",
+            dataPoints: dataPoints2
+            },
+            {
+            type: "line",
+            xValueType: "dateTime",
+            yValueFormatString: "$####.00",
+            showInLegend: true,
+            name: "Z coordinates" ,
+            color: "darkgreen",
+            dataPoints: dataPoints3
+            },
+
+            // Calibrated values
+            {
+            type: "line",
+            xValueType: "dateTime",
+            yValueFormatString: "$####.00",
+            showInLegend: true,
+            name: "X Standardized" ,
+            color: "pink",
+            dataPoints: dataPoints4
+            },
+            {
+            type: "line",
+            xValueType: "dateTime",
+            yValueFormatString: "$####.00",
+            showInLegend: true,
+            name: "Y Standardized" ,
+            color: "cyan",
+            dataPoints: dataPoints5
+            },
+            {
+            type: "line",
+            xValueType: "dateTime",
+            yValueFormatString: "$####.00",
+            showInLegend: true,
+            name: "Z Standardized" ,
+            color: "lightgreen",
+            dataPoints: dataPoints6
+            }
+
+
+        ]
+    // }),
+
+});
+
+function toggleDataSeries(e) {
+	if (typeof(e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+		e.dataSeries.visible = false;
+	}
+	else {
+		e.dataSeries.visible = true;
+	}
+	chart.render();
+}
+
+var updateInterval = 3000;
+
+// initial value
+var yValue1 = 250; 
+var yValue2 = 250;
+var yValue3 = 250;
+
+var time = new Date;
+// starting at 9.30 am
+time.setHours(9);
+time.setMinutes(30);
+time.setSeconds(00);
+time.setMilliseconds(00);
+
+
+
+function updateChart() {
+	// console.log(x);
+	count = 100;
+	count = count || 1;
+    
+
+    $.getJSON('http://phant.it.tufts.edu/output/pgwXVQg9zKF9Xb2kzA6dh3E30vo/latest.json', function (jsonData) {
+
+	for (var i = 0; i < count; i++) 
+	{
+		
+        function getQueryVariable(variable)
+		{
+			var query = window.location.search.substring(1);
+			var vars = query.split("&");
+			for (var i=0;i<vars.length;i++) 
+			{
+					var pair = vars[i].split("=");
+					if(pair[0] == variable){return pair[1];}
+       		}
+       		return(false);
+		}
+		
+
+		x_cal = getQueryVariable("x_cal");
+        y_cal = getQueryVariable("y_cal");
+        z_cal = getQueryVariable("z_cal");
+        x_cal = parseFloat(x_cal);
+        y_cal = parseFloat(y_cal);
+        z_cal = parseFloat(z_cal);
+
+
+	
+
+        console.log(x_cal)
+
+        z_data = jsonData[0].gy_z;
+        z_data = parseFloat(z_data);
+
+		y_data = jsonData[0].gy_y;
+        y_data = parseFloat(y_data);
+
+		x_data = jsonData[0].gy_x;
+        x_data = parseFloat(x_data);
+        
+		// console.log(data);
+		time.setTime(time.getTime()+ updateInterval);
+		deltaY1 = .5 + Math.random() *(-.5-.5);
+		deltaY2 = .5 + Math.random() *(-.5-.5);
+
+		// pushing the new values
+		dataPoints1.push({
+			x: time.getTime(),
+			y: x_data
+		});
+		dataPoints2.push({
+			x: time.getTime(),
+			y: y_data
+		});
+		dataPoints3.push({
+			x: time.getTime(),
+			y: z_data
+        
+		});
+
+
+        dataPoints4.push({
+			x: time.getTime(),
+			y: x_cal
+		});
+		dataPoints5.push({
+			x: time.getTime(),
+			y: y_cal
+		});
+		dataPoints6.push({
+			x: time.getTime(),
+			y: z_cal
+        
+		});
+	}
+
+	// updating legend text with  updated with y Value 
+	chart.options.data[0].legendText = "X Coordinate: " + x_data;
+	chart.options.data[1].legendText = "Y Coordinate: " + y_data; 
+	chart.options.data[2].legendText = "Z Coordinate: " + z_data; 
+    chart.options.data[3].legendText = "X standard: " + x_cal;
+	chart.options.data[4].legendText = "Y standard: " + y_cal; 
+	chart.options.data[5].legendText = "Z standard: " + z_cal;
+	chart.render();
+    });
+}
+// generates first set of dataPoints 
+// x = test(data);
+updateChart();
+// getData()
+setInterval(function(){updateChart()}, updateInterval);
+
+}
+</script>
+
+
+
+</head>
+<body>
+<div id="chartContainer" style="height: 370px; max-width: 920px; margin: 0px auto;"></div>
+<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+
+</body>
+</html>
