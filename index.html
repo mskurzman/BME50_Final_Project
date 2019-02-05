@@ -1,0 +1,185 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<script>
+
+window.onload = function () {
+
+var dataPoints1 = [];
+var dataPoints2 = [];
+var dataPoints3 = [];
+
+
+var chart = new CanvasJS.Chart("chartContainer", {
+
+
+	zoomEnabled: true,
+	title: {
+		text: "Posture data"
+	},
+	axisX: {
+		title: "time"
+	},
+	axisY:{
+		prefix: "",
+		includeZero: false
+	}, 
+	toolTip: {
+		shared: true
+	},
+	legend: {
+		cursor:"pointer",
+		verticalAlign: "top",
+		fontSize: 22,
+		fontColor: "dimGrey",
+		itemclick : toggleDataSeries
+	},
+
+	data: 
+    // $.getJSON('http://phant.it.tufts.edu/output/pgwXVQg9zKF9Xb2kzA6dh3E30vo/latest.json', function (jsonData) {
+        [
+            { 
+            type: "line",
+            xValueType: "dateTime",
+            yValueFormatString: "$####.00",
+            xValueFormatString: "hh:mm:ss TT",
+            showInLegend: true,
+            name: "X coordinates",
+            dataPoints: dataPoints1
+            },
+            {				
+            type: "line",
+            xValueType: "dateTime",
+            yValueFormatString: "$####.00",
+            showInLegend: true,
+            name: "Y coordinates" ,
+            dataPoints: dataPoints2
+            },
+            {
+            type: "line",
+            xValueType: "dateTime",
+            yValueFormatString: "$####.00",
+            showInLegend: true,
+            name: "Z coordinates" ,
+			color: "darkgreen",
+            dataPoints: dataPoints3
+            }
+        ]
+    // }),
+
+});
+
+function toggleDataSeries(e) {
+	if (typeof(e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+		e.dataSeries.visible = false;
+	}
+	else {
+		e.dataSeries.visible = true;
+	}
+	chart.render();
+}
+
+var updateInterval = 3000;
+
+// initial value
+var yValue1 = 250; 
+var yValue2 = 250;
+var yValue3 = 250;
+
+var time = new Date;
+// starting at 9.30 am
+time.setHours(9);
+time.setMinutes(30);
+time.setSeconds(00);
+time.setMilliseconds(00);
+
+
+
+function updateChart() {
+	// console.log(x);
+	count = 100;
+	count = count || 1;
+    
+
+    $.getJSON('http://phant.it.tufts.edu/output/pgwXVQg9zKF9Xb2kzA6dh3E30vo/latest.json', function (jsonData) {
+
+	for (var i = 0; i < count; i++) 
+	{
+		
+        z_data = jsonData[0].gy_z;
+        z_data = parseFloat(z_data);
+
+		y_data = jsonData[0].gy_y;
+        y_data = parseFloat(y_data);
+
+		x_data = jsonData[0].gy_x;
+        x_data = parseFloat(x_data);
+        
+		// console.log(data);
+		time.setTime(time.getTime()+ updateInterval);
+		deltaY1 = .5 + Math.random() *(-.5-.5);
+		deltaY2 = .5 + Math.random() *(-.5-.5);
+
+		// pushing the new values
+		dataPoints1.push({
+			x: time.getTime(),
+			y: x_data
+		});
+		dataPoints2.push({
+			x: time.getTime(),
+			y: y_data
+		});
+		dataPoints3.push({
+			x: time.getTime(),
+			y: z_data
+        
+		});
+	}
+
+	// updating legend text with  updated with y Value 
+	chart.options.data[0].legendText = "X Coordinate: " + x_data;
+	chart.options.data[1].legendText = "Y Coordinate: " + y_data; 
+	chart.options.data[2].legendText = "Z Coordinate: " + z_data; 
+	chart.render();
+    });
+}
+// generates first set of dataPoints 
+// x = test(data);
+updateChart();
+// getData()
+setInterval(function(){updateChart()}, updateInterval);
+
+}
+</script>
+</head>
+<body>
+<div id="chartContainer" style="height: 370px; max-width: 920px; margin: 0px auto;"></div>
+<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+
+<div style = "text-align: center">
+	<p>
+		Stand up in a straight posture for 5 seconds, then calibrate
+	</p>
+
+	<script>
+
+		$.getJSON('http://phant.it.tufts.edu/output/pgwXVQg9zKF9Xb2kzA6dh3E30vo/latest.json', function (jsonData) 
+		{
+			var x_data = jsonData[0].gy_x;
+			var y_data = jsonData[0].gy_y;
+			var z_data = jsonData[0].gy_z;
+			var url = "file:///Users/jeffreybui/Desktop/posture_detector/calibrated.html?x_cal=" + x_data +"&y_cal=" + y_data + "&z_cal=" + z_data;
+			$('#x').click(function(){
+    		location.href=url;
+			})
+		});
+	</script>
+	<button id="x">Calibrate</button>
+
+
+</div>
+
+
+</body>
+</html>
